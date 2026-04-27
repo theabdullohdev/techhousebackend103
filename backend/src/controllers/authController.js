@@ -1,8 +1,9 @@
 import bcrypt from "bcrypt";
-import users from "../data/db.js";
+import {users} from "../data/db.js";
 import jwt from "jsonwebtoken";
 
 export async function register(req, res) {
+
   const { username, email, password } = req.body;
 
   // 1 validation
@@ -33,6 +34,8 @@ export async function register(req, res) {
 }
 
 export async function login(req, res) {
+  return res.status(400).json({ message: "All fields are required!" });
+
   const { email, password } = req.body;
 
   // 1 validation

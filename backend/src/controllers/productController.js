@@ -1,164 +1,159 @@
-import { productsDB } from "../data/db.js"
-import { v4 as uuid } from "uuid"
+import {products} from "../data/db.js";
 
-export async function getProducts(req, res) {
-    try {
-        const products = productsDB
-
-        res.status(200).json({
-            success: true,
-            count: products.length,
-            data: products
-        })
-    } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        })
-        console.log(err);
-    }
+export function getProducts(req,res){
+    return res.status(200).json({
+        message: "All products",
+        data: products
+    });
 }
 
-
-export async function getProduct(req, res) {
-    try {
-        const { id } = req.params;
-
-
-
-        const product = productsDB.find((p) => p.id === p.id);
-
-      
-        if (!product) {
-            console.log(`404: Product with ID ${id} not found.`);
-            return res.status(404).json({
+export function getProduct(req,res) {
+    const id = req.params.id;
+    const product = products.find((e)=>`${e.id}`===id);
+    console.log(product);
+    if(!product) {
+        return res.status(404).json(
+            {
                 success: false,
-                message: "Product doesn't exist in db !!!"
-            });
-        }
-
-  
-        res.status(200).json({
-            success: true,
+                message: "Product doesnt exist in db",
+                id: id
+            }
+        );
+    }
+    return res.status(200).json(
+        {
+            succes: true,
+            message: "Product found",
+            id: id,
             data: product
-        });
-
-    } catch (err) {
-  
-        console.error("Error in getProduct:", err);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error !"
-        });
-    }
+        }
+    );
 }
-export const createProduct = (req, res) => {
-    try {
-        const { name, price, category, inStock, description, imageUrl } = req.body;
 
- 
-        if (!name || !price || !category) {
-            return res.status(400).json({ message: "Name, price and category are required!" });
-        }
+export function createProduct(req,res){
+    const {
+        name,
+        price,
+        category,
+        stock,
+        description,
+        image_url
+    } = req.body;
 
-        const newProduct = {
-            id: uuid(), 
-            name,
-            price: Number(price), 
-            category,
-            inStock: Number(inStock) || 0,
-            description,
-            imageUrl,
-            createdAt: new Date().toISOString()
-        };
-
-      
-        productsDB.push(newProduct);
-
-        res.status(201).json({
-            success: true,
-            message: "Product successfully added to db",
-            product: newProduct
-        });
-
-    } catch (error) {
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-
-export async function updateProduct(req, res) {
-
-    try {
-        const { id } = req.params
-
-        const { name, price, category, inStock, description, imageUrl } = req.body;
-
-        const index = productsDB.findIndex(p => p.id == id)
-
-        if (index === -1) {
-            return res.status(404).json({
-                succes: false,
-                message: "Error occured!, Product not found."
-            })
-        }
-
-        productsDB[index].name = name || productsDB[index].name
-        productsDB[index].price = price ?? productsDB[index].price;
-        productsDB[index].category = category || productsDB[index].category;
-        productsDB[index].description = description || productsDB[index].description;
-        productsDB[index].imageUrl = imageUrl || productsDB[index].imageUrl;
-
-
-        productsDB[index].inStock = inStock ?? productsDB[index].inStock;
-        productsDB[index].createdAt = new Date().toISOString()
-
-        return res.status(200).json({
+    if(
+        !name ||
+        !price ||
+        !category ||
+        !stock ||
+        !description ||
+        !image_url
+    ) {
+        return res.status(400).json({
+            message: "All fields are required!",
             success: false,
-            message: "Procuct succesfully updated !",
-            data: productsDB[index]
-        })
-
-    } catch (err) {
-      
-        console.error("Update Error:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
+            id: id
         });
     }
+
+    const id = crypto.randomUUID();
+    const createdAt = new Date().toISOString();
+    const product = {
+        name,
+        price,
+        category,
+        stock,
+        description,
+        image_url,
+        createdAt,
+        id
+    };
+    products.push(product);
+    return res.status(201).json({
+        message: "Product added",
+        success: true,
+        id: id,
+        data: product
+    });
 
 }
-export async function deleteProduct(req, res) {
-    try {
-        const { id } = req.params;
-  
-        const index = productsDB.findIndex(p => p.id == id);
-   
-        if (index === -1) {
-            return res.status(404).json({
-                success: false,
-                message: "Product not found"
-            });
-        }
 
-        productsDB.splice(index, 1);
-    
-        return res.status(200).json({
-            success: true,
-            message: "Mahsulot muvaffaqiyatli o'chirildi."
-        });
+export function updateProduct(req,res) {
+    const id = req.params.id;
 
-        
+    const {
+        name,
+        price,
+        category,
+        stock,
+        description,
+        image_url
+    } = req.body;
 
-    } catch (error) {
-        console.error("Update Error:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: error.message
+    if(
+        !name ||
+        !price ||
+        !category ||
+        !stock ||
+        !description ||
+        !image_url
+    ) {
+        return res.status(400).json({
+            message: "All fields are required!",
+            success: false
         });
     }
 
+
+    const product = products.find((e)=>e.id===id);
+    if(!product) {
+        return res.status(404).json({
+            message: "Not Found",
+            success: false,
+            id: id
+        });
+    }
+
+    if(
+        name===product.name &&
+        price===product.price &&
+        category===product.category &&
+        stock===product.stock &&
+        description===product.description &&
+        image_url===product.image_url
+    ) {
+        return res.status(400).json({
+            message: "No changes detected",
+            success: false
+        });
+    }
+    product.name = name;
+    product.price = price;
+    product.category = category;
+    product.stock = stock;
+    product.description = description;
+    product.image_url = image_url;
+    product.updatedAt = new Date().toISOString();
+    return res.status(200).json({
+        message: "Product has been changed",
+        success: true,
+        id: id,
+    });
+
+}
+
+export function deleteProduct(req,res) {
+    const id = req.params.id;
+    const product = products.find((e)=>e.id===id);
+    if(!product) {
+        return res.status(404).json({
+            message: "Not Found",
+            success: false
+        });
+    }
+    const index = products.findIndex((e)=>e.id!==id);
+    products.splice(index,1);
+    return res.status(200).json({
+        message: "Product deleted",
+        success: true
+    });
 }
